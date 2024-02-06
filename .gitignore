@@ -1,0 +1,5 @@
+data/
+PERSONAL_README.md
+NewsEdits.code-workspace
+*.csv
+**/**.pyc
