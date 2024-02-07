@@ -162,12 +162,12 @@ train_articles = set(article_ids[:int(len(article_ids) * 0.8)])
 dev_articles = set(article_ids[int(len(article_ids) * 0.8):int(len(article_ids) * 0.9)])
 test_articles = set(article_ids[int(len(article_ids) * 0.9):])
 
+split_mapping = np.where(all_df["article_id"].isin(train_articles), "train", np.where(all_df["article_id"].isin(dev_articles), "dev", "test"))
+all_df["split"] = split_mapping
+
 train_df = all_df[all_df["article_id"].isin(train_articles)]
 dev_df = all_df[all_df["article_id"].isin(dev_articles)]
 test_df = all_df[all_df["article_id"].isin(test_articles)]
-
-split_mapping = np.where(all_df["article_id"].isin(train_articles), "train", np.where(all_df["article_id"].isin(dev_articles), "dev", "test"))
-all_df["split"] = split_mapping
 
 logger.info(f"\n# train rows: {len(train_df)}\n# dev rows: {len(dev_df)}\n# test rows: {len(test_df)}")
 
@@ -178,5 +178,11 @@ logger.info(combined_label_distribution)
 # save as csv 
 save_fp = "/Users/jcho/projects/NewsEdits/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-and-split.csv"
 all_df.to_csv(save_fp)
-
 logger.info(f"Saved data as csv file to: {save_fp}")
+
+train_fp = "/Users/jcho/projects/NewsEdits/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-train.csv"
+dev_fp = "/Users/jcho/projects/NewsEdits/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-dev.csv"
+test_fp = "/Users/jcho/projects/NewsEdits/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-test.csv"
+train_df.to_csv(train_fp)
+dev_df.to_csv(dev_fp)
+test_df.to_csv(test_fp)

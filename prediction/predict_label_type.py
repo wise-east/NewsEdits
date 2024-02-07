@@ -9,7 +9,6 @@ from tqdm import tqdm
 from sklearn.metrics import f1_score
 from pathlib import Path
 
-
 class OpenAIClassifier: 
 
     def __init__(self, model_name:str, consider_nones:bool=True):

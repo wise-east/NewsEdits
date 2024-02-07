@@ -24,8 +24,10 @@ python predict_label_type.py
 
 ### Fine-tuned prediction 
 
+Use Steeve's codebase as starting point. Inside `newsedit_pp` directory, run the following command: 
+
 ```bash
-TBD 
+source run_led.sh
 ```
 
 
