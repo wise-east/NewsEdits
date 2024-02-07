@@ -12,12 +12,15 @@ from pathlib import Path
 
 class OpenAIClassifier: 
 
-    def __init__(self, model_name):
+    def __init__(self, model_name:str, consider_nones:bool=True):
         
         self.client = OpenAI() 
         self.model_name = model_name
+        self.consider_nones = consider_nones
+        
         self.detailed_label_definitions = DETAILED_LABEL_DEFINITIONS
         self.high_level_label_definitions = HIGH_LEVEL_LABEL_DEFINITIONS
+        
         self._format_label_descriptions()
         
     def predict_label_with_target_sentence_only(self, target_sentence:str, show_input:bool=False)->str:
@@ -44,11 +47,15 @@ class OpenAIClassifier:
         
         self.high_level_label_description = ""
         for label, definition in self.high_level_label_definitions.items():
-            self.high_level_label_description += f"\t{label}: {definition}\n\n"
+            if not self.consider_nones and label.lower() == "none":
+                continue
+            self.high_level_label_description += f"\t{label.lower()}: {definition}\n\n"
         
         self.detailed_label_description = "" 
         for label, definition in self.detailed_label_definitions.items(): 
-            self.detailed_label_description += f"\t{label}: {definition}\n\n"
+            if not self.consider_nones and label.lower() == "none":
+                continue
+            self.detailed_label_description += f"\t{label.lower()}: {definition}\n\n"
         
     
     def _form_target_sentence_only_prompt(self, target_sentence:str) -> str: 
@@ -77,6 +84,7 @@ def main():
     parser.add_argument("--random_seed", type=int, help="Random seed to use for sampling test data. Default: 42", default=42)
     parser.add_argument("--testset_size", type=int, help="Size of test set to use for testing the script. Default: 1000", default=1000)
     parser.add_argument("--prediction_save_path", type=str, help="Path to save predictions. Default: predictions.csv", default="predictions.csv")
+    parser.add_argument("--consider_nones", action="store_true", help="Consider None as a label. Default: True", default=True)
     args = parser.parse_args()
     
     # load test set data 
@@ -105,7 +113,7 @@ def main():
     logger.info(label_distribution)
     
     # initialize classifier 
-    openai_classifier = OpenAIClassifier(model_name=args.model_name)
+    openai_classifier = OpenAIClassifier(model_name=args.model_name, consider_nones=args.consider_nones)
     
     # predict label for test set 
     predictions =[] 

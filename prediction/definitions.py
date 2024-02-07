@@ -1,7 +1,7 @@
 HIGH_LEVEL_LABEL_DEFINITIONS = {
-    "fact": "The journalist will make a factual correction or addition to the article.", 
-    "style": "The journalist will make a stylistic change to the article.",
-    # "None": "The journalist will not make any changes to the article."
+    "fact": "The journalist will make a factual correction or addition to the sentence.", 
+    "style": "The journalist will make a stylistic change to the sentence.",
+    "none": "The journalist will not make any changes to the sentence."
 }
 
 DETAILED_LABEL_DEFINITIONS = {
