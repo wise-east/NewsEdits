@@ -1,4 +1,5 @@
 data/
+*.jsonl
 PERSONAL_README.md
 NewsEdits.code-workspace
 *.csv

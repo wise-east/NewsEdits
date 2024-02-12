@@ -15,10 +15,11 @@ import numpy as np
 HOME_DIR = "/project/jonmay_231/hjcho/NewsEdits"
 
 logger.info("Starting to format data...")
+version = 3 
 
 # load files to merge to get timestamps 
 # data with article content
-orig_df = load_csv_as_df(f"{HOME_DIR}/data/prediction_data/v2-silver-labeled-data-for-prediction.csv")
+orig_df = load_csv_as_df(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction.csv")
 # metadata with timestamps
 timestamp_df = load_csv_as_df(f"{HOME_DIR}/data/prediction_data/v2-metadata-incl-timestamp.csv")
 
@@ -51,7 +52,7 @@ timestamp_df = timestamp_df.drop(columns=["version", "version_type"])
 
 # optional as it has been tested for the files of intereset. can skip 
 merge_keys = ['entry_id', 'source', 'version_x', 'version_y']
-test_key_agreement_before_merging(df1 = orig_df, df2 = timestamp_df, keys=merge_keys)
+# test_key_agreement_before_merging(df1 = orig_df, df2 = timestamp_df, keys=merge_keys)
 
 logger.info(f"# rows before merge: {len(orig_df)}")
 
@@ -231,9 +232,9 @@ logger.info(combined_update_category_distribution)
 # all_df.to_csv(save_fp)
 # logger.info(f"Saved data as csv file to: {save_fp}")
 
-train_fp = f"{HOME_DIR}/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-train.csv"
-dev_fp = f"{HOME_DIR}/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-dev.csv"
-test_fp = f"{HOME_DIR}/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-test.csv"
+train_fp = f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train.csv"
+dev_fp = f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev.csv"
+test_fp = f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test.csv"
 train_df.to_csv(train_fp)
 dev_df.to_csv(dev_fp)
 test_df.to_csv(test_fp)
