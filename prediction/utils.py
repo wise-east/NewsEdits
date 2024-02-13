@@ -58,3 +58,41 @@ def compute_metrics(pred):
         "accuracy": accuracy["accuracy"],
         "f1": f1,
     }
+    
+    
+COARSEGRAINED_TO_FINEGRAINED = {
+    
+    "style": [
+        "Simplification",
+        "Emphasize a Point",
+        "Syntax Correction",
+        "Define term",
+        "Delete Unwanted Tone",
+        "Style-Guide Adherence",
+        "Sensitivity Consideration",
+        "Tonal Edits",
+        "De-emphasize a Point",
+        "Tonal Improvement",
+        "Style-Guide Edits",
+        "Emphasize importance",
+        "De-emphasize importance"
+    ],
+    "factual": [
+        "Update Eye-witness account",
+        "Add Additional Sourcing",
+        "Event Update",
+        "Delete Source-Document Reference",
+        "Event Addition",
+        "Source-Document Addition",
+        "Delete Quote",
+        "Quote Update",
+        "Additional Sourcing",
+        "Add Correction",
+        "Quote Addition",
+        "Add Eye-witness account",
+        "Correction",
+        "Delete Event Reference",
+        "Source-Document Update",
+        "Add Information (Other)"
+    ]
+}

@@ -13,27 +13,38 @@ pip install -r requirements.txt
 ### Format data 
 
 ```bash
-python format_data.py
+# format data for longformer training and preparing data that will be formatted for openAI prediction (gpt_finetuning.py --format_data)
+# strict_fact is the stricter set of labels that correspond to fact 
+python format_data.py --label_type [all, fact, strict_fact] --version [2, 3] --home_dir <path to repo>
 ``` 
 
-### Zero-shot & Fine-tuned OpenAI prediction 
+### Longformer Fine-tuning
 
-```bash
-python predict_label_type.py --model_name <model> --prompt_type <prompt_type> 
-```
-
-### Fine-tuned prediction 
-
-Use Steeve's codebase as starting point. Inside `newsedit_pp` directory, run the following command: 
+Used Steeve's [codebase](https://github.com/khuangaf/newsedit_pp) as starting point. Inside `newsedit_pp/modeling` directory, run the following command: 
 
 ```bash
 source run_led.sh
 ```
 
+### Zero-shot & Fine-tuned OpenAI prediction 
 
+```bash
+# predicting with OpenAI models 
+python predict_label_type.py --model_name [gpt-3.5-turbo, gpt-4-0125-preview, <finetuned model name>] --prompt_type [sentence_only, direct_context, full_article]
 
+# format data for gpt_finetuning, saves all prompt type formats. Requires file from format_data.py
+python gpt_finetuning.py --format_data
+
+# upload file and submit finetuning job to OpenAI. set fp to the file path of the training data from the previous step
+python gpt_finetuning.py --prompt_type [sentence_only, direct_context, full_article] --fp <training file fp> --model [gpt-3.5-turbo]
 ```
-Test set info: Counter({'none': 1654, 'fact': 211, 'style': 135})
+
+
+# Get prediction results
+```bash 
+# compute detailed metrics for predictions. 
+# can handle both test_generation.txt files from longformer training results and predictions from OpenAI models 
+python compute_f1.py --predictions_fp <fp>
 ```
 
 ### GPT-3.5 Results 

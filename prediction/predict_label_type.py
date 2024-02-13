@@ -96,6 +96,7 @@ def main():
     parser.add_argument("--model_name", type=str, help="Name of the model to use for prediction. Default: gpt-3.5-turbo", default="gpt-3.5-turbo")
     # parser.add_argument("--prediction_method", type=str, help="One of [target_sentence_only, target_sentence_and_context]. Default: target_sentence_only", default="target_sentence_only")
     parser.add_argument("--prompt_type", type=str, help="Type of prompt to use for prediction. One of [sentence_only, direct_context, full_article]. Default: sentence_only", default="sentence_only")
+    parser.add_argument("--label_type", type=str, default="fact", help="Type of label to focus on. One of ['fact', 'all']. All looks at 'style' labels as well.")
     parser.add_argument("--test", action="store_true", help="Use small sample of test data for testing the script")
     parser.add_argument("--pred_fp", type=str, help="Path to save predictions. Default: predictions.csv", default="predictions.csv")
     args = parser.parse_args()

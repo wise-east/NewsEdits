@@ -7,36 +7,11 @@ import numpy as np
 from openai import OpenAI
 import json
 from loguru import logger
+from utils import COARSEGRAINED_TO_FINEGRAINED
+from pathlib import Path
 
 
-classifier = OpenAIClassifier(model_name="gpt-3.5-turbo")
-tokenizer = AutoTokenizer.from_pretrained('gpt2')
-version=3
-
-# format data 
-HOME_DIR = "/project/jonmay_231/hjcho/NewsEdits"
-
-train_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train.csv")
-validation_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev.csv")
-test_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test.csv")
-
-train_dataset = Dataset.from_pandas(train_data, split="train")
-validation_dataset = Dataset.from_pandas(validation_data, split="validation")
-test_dataset = Dataset.from_pandas(test_data, split="test")
-
-# shuffle with seed to 42  and sample 16000
-train_dataset = train_dataset.shuffle(seed=42).select(range(16000))
-# do the same with 2000 for validation and test 
-validation_dataset = validation_dataset.shuffle(seed=42).select(range(2000))
-test_dataset = test_dataset.shuffle(seed=42).select(range(2000))
-
-# save these files as csv
-train_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train_16000.csv")
-validation_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev_2000.csv")
-test_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test_2000.csv")
-
-
-def calc_finetuning_total_costs(): 
+def calc_finetuning_total_costs(train_dataset, validation_dataset, test_dataset, classifier, tokenizer): 
     
     for dataset in [train_dataset, validation_dataset, test_dataset]:
         dataset = dataset.map(lambda x : {
@@ -107,7 +82,7 @@ def calc_finetuning_total_costs():
 
     print(df)
 
-def format_and_save_data_for_gpt_finetuning(dataset: Dataset, split:str) -> str: 
+def format_and_save_data_for_gpt_finetuning(dataset: Dataset, split:str, save_dir:str) -> str: 
     
     dataset = dataset.map(lambda x : 
         {
@@ -172,8 +147,8 @@ def format_and_save_data_for_gpt_finetuning(dataset: Dataset, split:str) -> str:
     for prompt_type in ["sentence_only", "direct_context", "full_article"]:
         messages_list = dataset[prompt_type+ "_messages"]
         
-        fp = f"{prompt_type}_{split}.jsonl"
-        with open(fp, "w") as f: 
+        fp = Path(save_dir) / f"{prompt_type}_{split}.jsonl"
+        with fp.open("w") as f:
             for messages in messages_list: 
                 f.write(json.dumps(messages) + "\n")
                 
@@ -213,21 +188,77 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument("--prompt_type", type=str, default="sentence_only", help="prompt type to use for finetuning. One of 'sentence_only', 'direct_context', 'full_article'")
+    parser.add_argument("--label_type", type=str, default="fact", help="Type of label to focus on. One of ['fact', 'strict_fact', 'all']. All looks at 'style' labels as well.")
     parser.add_argument("--format_data", action="store_true", help="format and save data for finetuning")
     parser.add_argument("--fp", type=str, help="file path to use for finetuning, should be a jsonl file with openai messages formatting")
+    parser.add_argument("--model", type=str, default="gpt-3.5-turbo", help="model to use for finetuning")
+    args = parser.parse_args()
+    parser.add_argument("--save_dir", type=str, default="openai_data", help="directory to save finetuning files")
+    parser.add_argument("--version", type=int, default=3, help="version of the data to use for finetuning")
+    parser.add_argument("--home_dir", type=str, default="/project/jonmay_231/hjcho/NewsEdits", help="home directory for the project")
+    parser.add_argument("--train_size", type=int, default=16000, help="size of the training dataset")
+    parser.add_argument("--validation_size", type=int, default=2000, help="size of the validation dataset")
+    parser.add_argument("--seed", type=int, default=42, help="seed for shuffling the datasets")
     args = parser.parse_args()
     
     # calculate total costs for finetuning and inference
     # calc_finetuning_total_costs()
     # all_fps = {}
-    # for dataset, split in [(train_dataset, "train"), (validation_dataset, "validation"), (test_dataset, "test")]:
-    #     fp = format_and_save_data_for_gpt_finetuning(dataset, split)
-    #     fps[split] = fp
+
+
+    classifier = OpenAIClassifier(model_name=args.model)
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    version=args.version
+    label_type = args.label_type
+    train_size = args.train_size
+    validation_size = args.validation_size
+    seed = arg.seed
+    HOME_DIR = args.home_dir
+    
+    assert label_type in ["fact", "strict_fact", "all"], f"label type: {label_type} not in ['fact', 'strict_fact', 'all']"
+
+    # load data
+    train_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train{label_type}.csv")
+    validation_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev{label_type}.csv")
+    test_data = pd.read_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test{label_type}.csv")
+
+    gold_test_data_fp = f"{HOME_DIR}/data/prediction_data/test_v2.jsonl"
+
+    with open(gold_test_data_fp, "r") as f:
+        gold_test_data = [json.loads(line) for line in f]
+        
+    gold_test_data = pd.DataFrame(gold_test_data)
+    # create row with coarsegrained labels 
+
+    # drop sentence with na labels
+    finegrained_to_coarsegrained = {label:k for label in v for k, v in COARSEGRAINED_TO_FINEGRAINED.items()}
+    gold_test_data = gold_test_data.dropna(subset=["source_sentence"])
+    gold_test_data["update_category"] = gold_test_data["labels"].map(lambda x: "style" if x in COARSEGRAINED_TO_FINEGRAINED["style"] else "")
+
+    gold_test_dataset = Dataset.from_pandas(test_data, split="test")
+
+    train_dataset = Dataset.from_pandas(train_data, split="train")
+    validation_dataset = Dataset.from_pandas(validation_data, split="validation")
+    test_dataset = Dataset.from_pandas(test_data, split="test")
+
+    # shuffle with seed to 42  and sample 16000
+    train_dataset = train_dataset.shuffle(seed=seed).select(range(train_size))
+    # do the same with 2000 for validation and test 
+    validation_dataset = validation_dataset.shuffle(seed=seed).select(range(validation_size))
+    test_dataset = test_dataset.shuffle(seed=seed).select(range(validation_size))
+
+    # save these files as csv
+    train_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train_{train_size}.csv")
+    validation_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev_{validation_size}.csv")
+    test_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test_{validation_size}.csv")
 
     if args.format_data and args.fp is None: 
-        validation_fps = format_and_save_data_for_gpt_finetuning(validation_dataset, "validation")
-        test_fps = format_and_save_data_for_gpt_finetuning(test_dataset, "test")
-        fps = format_and_save_data_for_gpt_finetuning(train_dataset, "train")
+        if not Path(args.save_dir).exists(): 
+            Path(args.save_dir).mkdir()
+        
+        validation_fps = format_and_save_data_for_gpt_finetuning(validation_dataset, "validation", save_dir=args.save_dir)
+        test_fps = format_and_save_data_for_gpt_finetuning(test_dataset, "test", save_dir=args.save_dir)
+        fps = format_and_save_data_for_gpt_finetuning(train_dataset, "train", save_dir=args.save_dir)
         
         fp = fps[args.prompt_type]
         logger.info(f"Files saved for finetuning: {fps}")
@@ -242,7 +273,7 @@ def main():
     logger.info(f"Submitting finetuning job for prompt type: {args.prompt_type} using file: {fp}")
 
     # submit for finetuning 
-    submit_finetuning_job(fp, suffix=args.prompt_type)
+    submit_finetuning_job(fp, model=model, suffix=args.prompt_type)
 
     return 
 
