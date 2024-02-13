@@ -8,20 +8,22 @@ from pprint import pprint
 from tqdm import tqdm 
 from sklearn.metrics import f1_score
 from pathlib import Path
+import json 
+from collections import Counter
+import pandas as pd
 
 class OpenAIClassifier: 
 
-    def __init__(self, model_name:str, consider_nones:bool=True):
+    def __init__(self, model_name:str):
         
         self.client = OpenAI() 
         self.model_name = model_name
-        self.consider_nones = consider_nones
         
         self.detailed_label_definitions = DETAILED_LABEL_DEFINITIONS
         self.high_level_label_definitions = HIGH_LEVEL_LABEL_DEFINITIONS
         
         self._format_label_descriptions()
-        
+                
     def predict_label_with_target_sentence_only(self, target_sentence:str, show_input:bool=False)->str:
             
         prompt = self._form_target_sentence_only_prompt(target_sentence)
@@ -46,20 +48,34 @@ class OpenAIClassifier:
         
         self.high_level_label_description = ""
         for label, definition in self.high_level_label_definitions.items():
-            if not self.consider_nones and label.lower() == "none":
-                continue
             self.high_level_label_description += f"\t{label.lower()}: {definition}\n\n"
         
         self.detailed_label_description = "" 
         for label, definition in self.detailed_label_definitions.items(): 
-            if not self.consider_nones and label.lower() == "none":
-                continue
             self.detailed_label_description += f"\t{label.lower()}: {definition}\n\n"
         
     
-    def _form_target_sentence_only_prompt(self, target_sentence:str) -> str: 
+    def _form_system_prompt(self) -> str: 
         
-        prompt = f"Predict which type of update that the given target sentence will have given these label descriptions:\n{self.high_level_label_description}Target sentence: {target_sentence}\nLabel:"
+        system_prompt = f"Predict which type of update that the given target sentence will have given these label descriptions and context, if available.\n Labels:{self.high_level_label_description}\n"
+        
+        return system_prompt
+    
+    def _form_target_sentence_only_prompt(self, sample) -> str: 
+        
+        prompt = f"Target sentence: {sample['sentence']}\nLabel:"
+        
+        return prompt 
+    
+    def _form_target_with_direct_context_prompt(self, sample) -> str: 
+        
+        prompt = f"Context:{sample['direct_context']}\nTarget sentence: {sample['sentence']}\nLabel:"
+        
+        return prompt 
+    
+    def _form_target_with_full_article_prompt(self, sample) -> str: 
+        
+        prompt = f"Article:{sample['full_article']}\nTarget sentence: {sample['sentence']}\nLabel:"
         
         return prompt 
     
@@ -78,93 +94,86 @@ def main():
     
     parser = ArgumentParser()
     parser.add_argument("--model_name", type=str, help="Name of the model to use for prediction. Default: gpt-3.5-turbo", default="gpt-3.5-turbo")
-    parser.add_argument("--prediction_method", type=str, help="One of [target_sentence_only, target_sentence_and_context]. Default: target_sentence_only", default="target_sentence_only")
+    # parser.add_argument("--prediction_method", type=str, help="One of [target_sentence_only, target_sentence_and_context]. Default: target_sentence_only", default="target_sentence_only")
+    parser.add_argument("--prompt_type", type=str, help="Type of prompt to use for prediction. One of [sentence_only, direct_context, full_article]. Default: sentence_only", default="sentence_only")
     parser.add_argument("--test", action="store_true", help="Use small sample of test data for testing the script")
-    parser.add_argument("--random_seed", type=int, help="Random seed to use for sampling test data. Default: 42", default=42)
-    parser.add_argument("--testset_size", type=int, help="Size of test set to use for testing the script. Default: 1000", default=1000)
-    parser.add_argument("--prediction_save_path", type=str, help="Path to save predictions. Default: predictions.csv", default="predictions.csv")
-    parser.add_argument("--consider_nones", action="store_true", help="Consider None as a label. Default: True", default=True)
+    parser.add_argument("--pred_fp", type=str, help="Path to save predictions. Default: predictions.csv", default="predictions.csv")
     args = parser.parse_args()
     
-    # load test set data 
-    data = load_csv_as_df("/Users/jcho/projects/NewsEdits/data/prediction_data/v2-silver-labeled-data-for-prediction-with-date-and-split.csv")
-    logger.info(data.label.value_counts())
+    HOME_DIR = "/project/jonmay_231/hjcho/NewsEdits"
 
-    # any task specific data processing 
-    if args.prediction_method == "target_sentence_only": 
-        # remove cases that have no target sentence
-        data = data[~data["sentence"].isna()]
+    # load files from result of gpt_finetuning.py, already formatted as messages
+    load_test_fp = f"{args.prompt_type}_test.jsonl"
     
-    # keep only the test set 
-    test_set = data[data["split"] == "test"]
+    # load original test data with all columns 
+    load_test_fp_all_columns = f"{HOME_DIR}/data/prediction_data/v3-silver-labeled-data-for-prediction-with-date-test_2000.csv"
+    df_all_columns = load_csv_as_df(load_test_fp_all_columns)
 
-    # set random seed to get consistent results
-    np.random.seed(42)
-    
+    with open(load_test_fp, "r") as f:
+        data = [json.loads(line) for line in f]
+
     # sample to only use args.testset_size
     if args.test:
-        args.testset_size = 5 
-    logger.info(f"Sampling {args.testset_size} from test set")
-    test_set = test_set.sample(args.testset_size)   
+        testset_size = 5 
+        logger.info(f"Sampling {testset_size} from test set for testing")
+        data = data[:testset_size]
+        df_all_columns = df_all_columns[:testset_size]
+
+    # calculate label distribution    
+    labels = [i["messages"][-1]["content"] for i in data]
     
-    # get label distribution 
-    label_distribution = test_set.label.value_counts()
-    logger.info(label_distribution)
+    counter = Counter(labels)
+    logger.info(counter)
+        
     
     # initialize classifier 
-    openai_classifier = OpenAIClassifier(model_name=args.model_name, consider_nones=args.consider_nones)
+    openai_classifier = OpenAIClassifier(model_name=args.model_name)
     
     # predict label for test set 
     predictions =[] 
-    first = True
-    for idx, row in tqdm(test_set.iterrows(), total = len(test_set)):         
+    for sample in tqdm(data):
+        input_messages = sample["messages"][:-1] # last message contains the label
+        prediction = openai_classifier.predict(input_messages)
+        predictions.append(prediction.lower().strip())
 
-        target_sentence = row["sentence"]
-        label = row["update_category"]
-        prediction = openai_classifier.predict_label_with_target_sentence_only(target_sentence, show_input = first)
-        logger.info(f"Target sentence: {target_sentence}\nLabel: {label}\nPrediction: {prediction}")
-        predictions.append(prediction.lower())
+        if args.test:
+            logger.info(f"Sample input: {input_messages}")
+            logger.info(f"Prediction: {prediction}")
+            logger.info(f"True label: {sample['messages'][-1]['content']}")
         
-        first = False 
 
-    test_set["prediction"] = predictions
-        
-    category_labels = [i.lower() for i in test_set.update_category[:len(predictions)]]
-    accuracy = sum([1 for i, j in zip(category_labels, predictions) if i == j])/len(category_labels) * 100 
+   
+    accuracy = sum([1 for i, j in zip(labels, predictions) if i == j])/len(predictions) * 100 
     logger.info(f"Overall accuracy: {accuracy:.2f}\%")
     
     # get f1 score 
-    f1 = f1_score(category_labels, predictions, average="weighted")
+    f1 = f1_score(labels, predictions, average="weighted")
     logger.info(f"Overall F1 score: {f1:.2f}")
     
-    # accuracy for each category (fact / style)
-    category_distribution = test_set.update_category.value_counts()
-    for category in category_distribution.index:
-        category_accuracy = sum([1 for i, j in zip(category_labels, predictions) if i == j and i == category])/category_distribution[category] * 100
-        logger.info(f"Accuracy for {category}: {category_accuracy:.2f}\%")
+    # print f1 score for each update category ("fact", "style", "none")
+    update_categories = sorted(list(set(labels)))
+    for category in update_categories:
+        indices = [i for i, j in enumerate(labels) if j == category]
+        f1 = f1_score([labels[i] for i in indices], [predictions[i] for i in indices], average="weighted")
+        logger.info(f"F1 score for {category}: {f1:.2f}")
     
-    # accuracy for each specific label
-    for label in label_distribution.index: 
-        # if prediction = update_category column, then it's correct for that specific label 
-        test_set["correct"] = test_set["update_category"] == test_set["prediction"]
-        label_accuracy = test_set[test_set["label"] == label]["correct"].sum() / label_distribution[label] * 100
-        logger.info(f"Accuracy for {label}: {label_accuracy:.2f}\%") 
+    if args.test:
+        return  
     
-    # rename prediction filepath to include model name, random seed, and testset size
-    prediction_save_path = Path(args.prediction_save_path)
-    prediction_save_path = prediction_save_path.parent / f"{args.model_name}_seed{args.random_seed}_testset{args.testset_size}_{prediction_save_path.name}"
+    # save predictions
+    df_dict = {
+        "sentence": [i["messages"][1]["content"] for i in data], 
+        "update_category": labels,
+        "prediction": predictions,
+        "labels": df_all_columns["label"] # track finegrained labels as well 
+    }
     
-    #save predictions
-    # if file path already exists, add the date to the end of the file name
-    if prediction_save_path.exists():
-        prediction_save_path = prediction_save_path.parent / f"{prediction_save_path.stem}_{datetime.now().strftime('%Y-%m-%d')}{prediction_save_path.suffix}"
-        # if file path already exists, add number to the end of the file name
-        if prediction_save_path.exists():
-            i = 1
-            while prediction_save_path.exists():
-                prediction_save_path = prediction_save_path.parent / f"{prediction_save_path.stem}_{i}{prediction_save_path.suffix}"
-                i += 1
-    test_set.to_csv(prediction_save_path, index=False)
+    # add model name and number of test samples to filepath
+    pred_fp = args.pred_fp.replace(".csv", f"_{args.prompt_type}_{args.model_name}_{len(predictions)}.csv")
+    
+    df = pd.DataFrame(df_dict)
+    df.to_csv(pred_fp, index=False)
+
     
     return 
 

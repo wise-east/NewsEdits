@@ -30,6 +30,11 @@ train_dataset = train_dataset.shuffle(seed=42).select(range(16000))
 validation_dataset = validation_dataset.shuffle(seed=42).select(range(2000))
 test_dataset = test_dataset.shuffle(seed=42).select(range(2000))
 
+# save these files as csv
+train_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-train_16000.csv")
+validation_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-dev_2000.csv")
+test_dataset.to_csv(f"{HOME_DIR}/data/prediction_data/v{version}-silver-labeled-data-for-prediction-with-date-test_2000.csv")
+
 
 def calc_finetuning_total_costs(): 
     
@@ -220,7 +225,8 @@ def main():
     #     fps[split] = fp
 
     if args.format_data and args.fp is None: 
-
+        validation_fps = format_and_save_data_for_gpt_finetuning(validation_dataset, "validation")
+        test_fps = format_and_save_data_for_gpt_finetuning(test_dataset, "test")
         fps = format_and_save_data_for_gpt_finetuning(train_dataset, "train")
         
         fp = fps[args.prompt_type]
