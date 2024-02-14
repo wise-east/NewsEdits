@@ -138,28 +138,19 @@ Full article:
 Sentence only:
 Overall accuracy: 55.05%
 Overall F1 score: 0.60
-F1 score for fact: 0.69
-F1 score for style: 0.89
-F1 score for none: 0.63
 
 Direct context:
 Overall accuracy: 52.75%
 Overall F1 score: 0.59
-F1 score for fact: 0.67
-F1 score for style: 0.89
-F1 score for none: 0.60
 
 Full article:
 Overall accuracy: 54.00%
 Overall F1 score: 0.59
-F1 score for fact: 0.68
-F1 score for style: 0.89
-F1 score for none: 0.61
 
 ```
 
 
-### Strict label results with Longformer:
+### Strict fact label results with Longformer:
 
 ```
 Sentence only:
@@ -171,9 +162,11 @@ Sentence only:
     accuracy                           0.76       423
    macro avg       0.52      0.54      0.51       423
 weighted avg       0.87      0.76      0.81       423
-```
 
-```
+
+Direct context:
+--- not trained fully ---
+
 Full article:
               precision    recall  f1-score   support
 
@@ -185,3 +178,102 @@ Full article:
 weighted avg       0.89      0.70      0.77       423
 
 ```
+
+### fact (fact + background) results with longformer
+
+```
+Sentence only:
+
+              precision    recall  f1-score   support
+
+        fact       0.26      0.17      0.20        53
+        none       0.89      0.93      0.91       370
+
+    accuracy                           0.83       423
+   macro avg       0.57      0.55      0.56       423
+weighted avg       0.81      0.83      0.82       423
+
+Direct context:
+
+
+        fact       0.18      0.28      0.22        53
+        none       0.89      0.81      0.85       370
+
+    accuracy                           0.74       423
+   macro avg       0.53      0.55      0.53       423
+weighted avg       0.80      0.74      0.77       423
+
+
+Full article:
+              precision    recall  f1-score   support
+
+        fact       0.23      0.57      0.33        53
+        none       0.92      0.74      0.82       370
+
+    accuracy                           0.71       423
+   macro avg       0.58      0.65      0.57       423
+weighted avg       0.84      0.71      0.76       423
+
+```
+
+## Strict fact label results with GPT-3.5 zero-shot
+
+```
+Sentence only:
+        fact       0.07      0.28      0.11        32
+        none       0.92      0.69      0.79       391
+
+    accuracy                           0.66       423
+   macro avg       0.33      0.32      0.30       423
+weighted avg       0.86      0.66      0.74       423
+
+
+Direct context:
+                precision    recall  f1-score   support
+
+          fact       0.03      0.03      0.03        32
+factual update       0.00      0.00      0.00         0
+          none       0.92      0.92      0.92       391
+
+      accuracy                           0.85       423
+     macro avg       0.32      0.32      0.32       423
+  weighted avg       0.85      0.85      0.85       423
+
+Full article:
+             precision    recall  f1-score   support
+
+        fact       0.07      0.09      0.08        32
+        none       0.92      0.91      0.91       391
+
+    accuracy                           0.84       423
+   macro avg       0.50      0.50      0.50       423
+weighted avg       0.86      0.84      0.85       423
+```
+
+## Strict fact label results with GPT-4 zero-shot
+```
+Sentence only:
+              precision    recall  f1-score   support
+
+        fact       0.06      0.41      0.11        32
+        none       0.91      0.52      0.66       391
+
+    accuracy                           0.51       423
+   macro avg       0.49      0.46      0.39       423
+weighted avg       0.85      0.51      0.62       423
+
+Direct context:
+              precision    recall  f1-score   support
+
+        fact       0.11      0.22      0.15        32
+        none       0.93      0.86      0.89       391
+
+    accuracy                           0.81       423
+   macro avg       0.52      0.54      0.52       423
+weighted avg       0.87      0.81      0.84       423
+```
+
+## TODO
+
+<!-- checklist -->
+- [] combine predict_label_type and gpt_finetuning into one script

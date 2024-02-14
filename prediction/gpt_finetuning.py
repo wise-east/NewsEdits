@@ -13,8 +13,6 @@ from pathlib import Path
 
 class GPTFinetuningManager:
     def __init__(self, model_name: str = "gpt-3.5-turbo", args=None):
-        self.classifier = OpenAIClassifier(model_name)
-        self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
         self.args = args
         self.data_version = args.data_version
         self.label_type = args.label_type
@@ -22,6 +20,9 @@ class GPTFinetuningManager:
         self.train_size = self.args.train_size
         self.validation_size = self.args.validation_size
         self.save_dir = self.args.save_dir
+
+        self.classifier = OpenAIClassifier(model_name, self.label_type)
+        self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
         assert self.label_type in [
             "fact",
@@ -271,7 +272,7 @@ class GPTFinetuningManager:
                     "messages": [
                         {
                             "role": "system",
-                            "content": self.classifier._form_system_prompt(),
+                            "content": self.classifier.form_system_prompt(),
                         },
                         {
                             "role": "user",
@@ -286,7 +287,7 @@ class GPTFinetuningManager:
                     "messages": [
                         {
                             "role": "system",
-                            "content": self.classifier._form_system_prompt(),
+                            "content": self.classifier.form_system_prompt(),
                         },
                         {
                             "role": "user",
@@ -301,7 +302,7 @@ class GPTFinetuningManager:
                     "messages": [
                         {
                             "role": "system",
-                            "content": self.classifier._form_system_prompt(),
+                            "content": self.classifier.form_system_prompt(),
                         },
                         {
                             "role": "user",
@@ -369,7 +370,7 @@ def main():
     parser.add_argument(
         "--label_type",
         type=str,
-        default="fact",
+        default="strict_fact",
         help="Type of label to focus on. One of ['fact', 'strict_fact', 'all']. All looks at 'style' labels as well.",
     )
     parser.add_argument(

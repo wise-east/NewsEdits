@@ -1,3 +1,8 @@
+# predict update category for a target sentence using OpenAI models
+# saves results to csv file
+# usage: python predict_label_type.py --model_name gpt-3.5-turbo --prompt_type sentence_only --test --pred_fp predictions.csv
+# usage for gold set: python predict_label_type.py --model_name gpt-3.5-turbo --prompt_type sentence_only --gold --pred_fp predictions.csv
+
 from openai import OpenAI
 from utils import load_csv_as_df
 import numpy as np
@@ -6,7 +11,7 @@ from definitions import DETAILED_LABEL_DEFINITIONS, HIGH_LEVEL_LABEL_DEFINITIONS
 from argparse import ArgumentParser
 from pprint import pprint
 from tqdm import tqdm
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
 from pathlib import Path
 import json
 from collections import Counter
@@ -14,10 +19,11 @@ import pandas as pd
 
 
 class OpenAIClassifier:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, label_type: str):
 
         self.client = OpenAI()
         self.model_name = model_name
+        self.label_type = label_type
 
         self.detailed_label_definitions = DETAILED_LABEL_DEFINITIONS
         self.high_level_label_definitions = HIGH_LEVEL_LABEL_DEFINITIONS
@@ -50,13 +56,16 @@ class OpenAIClassifier:
 
         self.high_level_label_description = ""
         for label, definition in self.high_level_label_definitions.items():
-            self.high_level_label_description += f"\t{label.lower()}: {definition}\n\n"
+            if self.label_type == "fact":
+                if label in ["style"]:
+                    continue
+            self.high_level_label_description += f"\n\t{label.lower()}: {definition}\n"
 
         self.detailed_label_description = ""
         for label, definition in self.detailed_label_definitions.items():
-            self.detailed_label_description += f"\t{label.lower()}: {definition}\n\n"
+            self.detailed_label_description += f"\n\t{label.lower()}: {definition}\n"
 
-    def _form_system_prompt(self) -> str:
+    def form_system_prompt(self) -> str:
 
         system_prompt = f"Predict which type of update that the given target sentence will have given these label descriptions and context, if available.\n Labels:{self.high_level_label_description}\n"
 
@@ -91,10 +100,9 @@ def main():
     parser.add_argument(
         "--model_name",
         type=str,
-        help="Name of the model to use for prediction. Default: gpt-3.5-turbo",
+        help="Name of the model to use for prediction. Default: gpt-3.5-turbo. One of [gpt-3.5-turbo, gpt-4-0125-preview, or other custom trained models]",
         default="gpt-3.5-turbo",
     )
-    # parser.add_argument("--prediction_method", type=str, help="One of [target_sentence_only, target_sentence_and_context]. Default: target_sentence_only", default="target_sentence_only")
     parser.add_argument(
         "--prompt_type",
         type=str,
@@ -113,20 +121,52 @@ def main():
         help="Use small sample of test data for testing the script",
     )
     parser.add_argument(
+        "--gold",
+        action="store_true",
+        help="Use gold labels for testing the script",
+    )
+    parser.add_argument(
         "--pred_fp",
         type=str,
-        help="Path to save predictions. Default: predictions.csv",
-        default="predictions.csv",
+        help="Path to save predictions. args parameters will automatically be added to file name to distinguish runs. Default: predictions/predictions.csv",
+        default="predictions/predictions.csv",
     )
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        help="Path to data directory where outputs from `gpt_finetuning.py --format_data` are stored",
+        default="/project/jonmay_231/hjcho/NewsEdits/prediction/openai_data/",
+    )
+    parser.add_argument(
+        "--repo_dir",
+        type=str,
+        help="Path to repository directory",
+        default="/project/jonmay_231/hjcho/NewsEdits",
+    )
+
     args = parser.parse_args()
 
-    HOME_DIR = "/project/jonmay_231/hjcho/NewsEdits"
-
     # load files from result of gpt_finetuning.py, already formatted as messages
-    load_test_fp = f"{args.prompt_type}_test.jsonl"
+    load_test_fp = (
+        Path(args.data_dir) / f"{args.prompt_type}_{args.label_type}_test.jsonl"
+    )
+    if args.gold:
+        logger.info("Using gold labels for testing...")
+        load_test_fp = (
+            Path(args.data_dir)
+            / f"{args.prompt_type}_{args.label_type}_gold_test.jsonl"
+        )
 
     # load original test data with all columns to add back finegrained labels
-    load_test_fp_all_columns = f"{HOME_DIR}/data/prediction_data/v3-silver-labeled-data-for-prediction-with-date-test_2000.csv"
+    load_test_fp_all_columns = (
+        Path(args.repo_dir)
+        / f"data/prediction_data/v3-silver-labeled-data-for-prediction-with-date-test_2000.csv"
+    )
+    if args.gold:
+        load_test_fp_all_columns = (
+            Path(args.repo_dir)
+            / f"data/prediction_data/gold_test_v2_{args.label_type}.csv"
+        )
     df_all_columns = load_csv_as_df(load_test_fp_all_columns)
 
     with open(load_test_fp, "r") as f:
@@ -146,7 +186,9 @@ def main():
     logger.info(counter)
 
     # initialize classifier
-    openai_classifier = OpenAIClassifier(model_name=args.model_name)
+    openai_classifier = OpenAIClassifier(
+        model_name=args.model_name, label_type=args.label_type
+    )
 
     # predict label for test set
     predictions = []
@@ -183,6 +225,8 @@ def main():
     if args.test:
         return
 
+    print(classification_report(labels, predictions))
+
     # save predictions
     df_dict = {
         "sentence": [i["messages"][1]["content"] for i in data],
@@ -193,7 +237,8 @@ def main():
 
     # add model name and number of test samples to filepath
     pred_fp = args.pred_fp.replace(
-        ".csv", f"_{args.prompt_type}_{args.model_name}_{len(predictions)}.csv"
+        ".csv",
+        f"_{args.prompt_type}_{args.label_type}_{args.model_name}_{len(predictions)}.csv",
     )
 
     df = pd.DataFrame(df_dict)
