@@ -1,12 +1,12 @@
 # NewsEdits
 
-Hello and thank you for taking the time to visit NewsEdits! 
+Hello and thank you for taking the time to visit NewsEdits!
 
 This is the repository for the Outstanding Paper in NAACL2022, [NewsEdits: A News Article Revision Dataset and a Novel Document-Level Reasoning Challenge](https://aclanthology.org/2022.naacl-main.10/).
 
 In this repo, we:
 
-1. Provide our preprocessed datasets of NewsEdits. The data can be found at the following [Google Drive](https://drive.google.com/drive/folders/17a5S3liA0C91XbgnMBUQBo-NVb22Z9xf?usp=sharing) url. We provide the following sources: 
+1. Provide our preprocessed datasets of NewsEdits. The data can be found at the following [Google Drive](https://drive.google.com/drive/folders/17a5S3liA0C91XbgnMBUQBo-NVb22Z9xf?usp=sharing) url. We provide the following sources:
     * Associated Press (finished)
     * BBC (finished)
     * Guardian (finished)
@@ -27,14 +27,14 @@ In this repo, we:
     * The Rebel (matched, no sentence-splitting. Finishing ASAP.)
     * Toronto Sun (matched, no sentence-splitting. Finishing ASAP.)
     * CNN (not started)
-2. Provide demo notebooks to load and visualize the data in the `demo_notebooks/` folder.     
+2. Provide demo notebooks to load and visualize the data in the `demo_notebooks/` folder.
 3. Provide Spark scripts to process new datasets in the `spark/` folder.
-4. Provide model code (to come).  
+4. Provide model code (to come).
 
-We are working hard to put the final touches on this repo and we hope in the next weeks to be finished. Please reach out to `spangher@usc.edu` with any issues, questions, data requests, etc. and we will prioritise your enquiries. 
-    
+We are working hard to put the final touches on this repo and we hope in the next weeks to be finished. Please reach out to `spangher@usc.edu` with any issues, questions, data requests, etc. and we will prioritise your enquiries.
 
-![Demo](img/sentence-diagram.png) 
+
+![Demo](img/sentence-diagram.png)
 
 If you've found any of this useful or inspiring, please
 

@@ -7,16 +7,16 @@ import copy
 
 def read(pos, tree):
     count = []
-    while (pos > 0):
+    while pos > 0:
         count += tree[pos]
-        pos -= (pos & -pos)
+        pos -= pos & -pos
     return count
 
 
 def update(pos, MAX, edge, tree):
-    while (pos <= MAX):
+    while pos <= MAX:
         tree[pos].append(edge)
-        pos += (pos & -pos)
+        pos += pos & -pos
 
 
 def _find_crossings(n, m, e):
@@ -117,16 +117,28 @@ def find_refactors_for_doc(one_doc=None, sents_old=None, sents_new=None):
 
     # drop additions/deletions (these don't affect refactorings)
     if one_doc is not None:
-        one_doc = one_doc.sort_values(['sent_idx_x', 'sent_idx_y'])
-        one_doc = one_doc.loc[lambda df: df[['sent_idx_x', 'sent_idx_y']].notnull().all(axis=1)]
-        e_pre_map = one_doc[['sent_idx_x', 'sent_idx_y']].astype(int).apply(lambda x: tuple(x), axis=1)
+        one_doc = one_doc.sort_values(["sent_idx_x", "sent_idx_y"])
+        one_doc = one_doc.loc[
+            lambda df: df[["sent_idx_x", "sent_idx_y"]].notnull().all(axis=1)
+        ]
+        e_pre_map = (
+            one_doc[["sent_idx_x", "sent_idx_y"]]
+            .astype(int)
+            .apply(lambda x: tuple(x), axis=1)
+        )
 
         sents_old_idx_pre_map = sorted(list(set(list(map(lambda x: x[0], e_pre_map)))))
         sents_new_idx_pre_map = sorted(list(set(list(map(lambda x: x[1], e_pre_map)))))
 
         # map missing indices (the result of dropping additions/deletions) to a compressed set.
-        sents_old_map = {v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_old_idx_pre_map))}
-        sents_new_map = {v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_new_idx_pre_map))}
+        sents_old_map = {
+            v: correct_zero(k)
+            for k, v in enumerate(unique_everseen(sents_old_idx_pre_map))
+        }
+        sents_new_map = {
+            v: correct_zero(k)
+            for k, v in enumerate(unique_everseen(sents_new_idx_pre_map))
+        }
 
         #
         e = []
@@ -141,8 +153,12 @@ def find_refactors_for_doc(one_doc=None, sents_old=None, sents_new=None):
         sents_new = list(map(int, sents_new))
 
         # map missing indices (the result of dropping additions/deletions) to a compressed set.
-        sents_old_map = {v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_old))}
-        sents_new_map = {v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_new))}
+        sents_old_map = {
+            v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_old))
+        }
+        sents_new_map = {
+            v: correct_zero(k) for k, v in enumerate(unique_everseen(sents_new))
+        }
 
         sents_old = list(map(sents_old_map.get, sents_old))
         sents_new = list(map(sents_new_map.get, sents_new))
@@ -159,5 +175,7 @@ def find_refactors_for_doc(one_doc=None, sents_old=None, sents_new=None):
     if len(refactors) > 0:
         sents_old_map_r = {v: k for k, v in sents_old_map.items()}
         sents_new_map_r = {v: k for k, v in sents_new_map.items()}
-        refactors = list(map(lambda x: (sents_old_map_r[x[0]], sents_new_map_r[x[1]]), refactors))
+        refactors = list(
+            map(lambda x: (sents_old_map_r[x[0]], sents_new_map_r[x[1]]), refactors)
+        )
     return refactors

@@ -1,8 +1,8 @@
-# News Edits Update Type Prediction 
+# News Edits Update Type Prediction
 
-Used Python 3.10 
+Used Python 3.10
 
-## Set environment 
+## Set environment
 
 ```bash
 conda create -n newsedits_prediction python=3.10
@@ -10,26 +10,26 @@ conda activate newsedits_prediction
 pip install -r requirements.txt
 ```
 
-### Format data 
+### Format data
 
 ```bash
 # format data for longformer training and preparing data that will be formatted for openAI prediction (gpt_finetuning.py --format_data)
-# strict_fact is the stricter set of labels that correspond to fact 
+# strict_fact is the stricter set of labels that correspond to fact
 python format_data.py --label_type [all, fact, strict_fact] --version [2, 3] --home_dir <path to repo>
-``` 
+```
 
 ### Longformer Fine-tuning
 
-Used Steeve's [codebase](https://github.com/khuangaf/newsedit_pp) as starting point. Inside `newsedit_pp/modeling` directory, run the following command: 
+Used Steeve's [codebase](https://github.com/khuangaf/newsedit_pp) as starting point. Inside `newsedit_pp/modeling` directory, run the following command:
 
 ```bash
 source run_led.sh
 ```
 
-### Zero-shot & Fine-tuned OpenAI prediction 
+### Zero-shot & Fine-tuned OpenAI prediction
 
 ```bash
-# predicting with OpenAI models 
+# predicting with OpenAI models
 python predict_label_type.py --model_name [gpt-3.5-turbo, gpt-4-0125-preview, <finetuned model name>] --prompt_type [sentence_only, direct_context, full_article]
 
 # format data for gpt_finetuning, saves all prompt type formats. Requires file from format_data.py
@@ -41,16 +41,16 @@ python gpt_finetuning.py --prompt_type [sentence_only, direct_context, full_arti
 
 
 # Get prediction results
-```bash 
-# compute detailed metrics for predictions. 
-# can handle both test_generation.txt files from longformer training results and predictions from OpenAI models 
+```bash
+# compute detailed metrics for predictions.
+# can handle both test_generation.txt files from longformer training results and predictions from OpenAI models
 python compute_f1.py --predictions_fp <fp>
 ```
 
-### GPT-3.5 Results 
+### GPT-3.5 Results
 
 ```
-Sentence only: 
+Sentence only:
 2024-02-11 18:16:24.035 | INFO     | __main__:main:145 - Overall accuracy: 48.45\%
 2024-02-11 18:16:24.048 | INFO     | __main__:main:149 - Overall F1 score: 0.56
 2024-02-11 18:16:24.053 | INFO     | __main__:main:156 - F1 score for fact: 0.63
@@ -63,7 +63,7 @@ Sentence only:
 2024-02-11 22:59:55.706 | INFO     | __main__:main:158 - F1 score for fact: 0.53
 2024-02-11 22:59:55.713 | INFO     | __main__:main:158 - F1 score for none: 0.66
 
-Direct context: 
+Direct context:
 2024-02-11 18:31:01.978 | INFO     | __main__:main:145 - Overall accuracy: 66.75\%
 2024-02-11 18:31:01.991 | INFO     | __main__:main:149 - Overall F1 score: 0.68
 2024-02-11 18:31:01.994 | INFO     | __main__:main:156 - F1 score for fact: 0.22
@@ -76,7 +76,7 @@ Direct context:
 2024-02-11 23:18:50.612 | INFO     | __main__:main:158 - F1 score for none: 0.88
 2024-02-11 23:18:50.614 | INFO     | __main__:main:158 - F1 score for style: 0.10
 
-Full article: 
+Full article:
 2024-02-11 18:51:40.048 | INFO     | __main__:main:147 - Overall accuracy: 66.85\%
 2024-02-11 18:51:40.076 | INFO     | __main__:main:151 - Overall F1 score: 0.69
 2024-02-11 18:51:40.083 | INFO     | __main__:main:158 - F1 score for fact: 0.22
@@ -86,21 +86,21 @@ Full article:
 
 ### Fine-tuned GPT-3.5
 ```
-Sentence only: 
+Sentence only:
 2024-02-11 20:56:33.654 | INFO     | __main__:main:147 - Overall accuracy: 35.85\%
 2024-02-11 20:56:33.666 | INFO     | __main__:main:151 - Overall F1 score: 0.44
 2024-02-11 20:56:33.670 | INFO     | __main__:main:158 - F1 score for fact: 0.52
 2024-02-11 20:56:33.679 | INFO     | __main__:main:158 - F1 score for none: 0.52
 2024-02-11 20:56:33.681 | INFO     | __main__:main:158 - F1 score for style: 0.62
 
-Direct context: 
+Direct context:
 2024-02-11 20:48:04.393 | INFO     | __main__:main:147 - Overall accuracy: 36.30\%
 2024-02-11 20:48:04.404 | INFO     | __main__:main:151 - Overall F1 score: 0.45
 2024-02-11 20:48:04.407 | INFO     | __main__:main:158 - F1 score for style: 0.61
 2024-02-11 20:48:04.411 | INFO     | __main__:main:158 - F1 score for fact: 0.50
 2024-02-11 20:48:04.420 | INFO     | __main__:main:158 - F1 score for none: 0.53
 
-Full article: 
+Full article:
 2024-02-11 22:19:09.682 | INFO     | __main__:main:147 - Overall accuracy: 52.90\%
 2024-02-11 22:19:09.694 | INFO     | __main__:main:151 - Overall F1 score: 0.60
 2024-02-11 22:19:09.698 | INFO     | __main__:main:158 - F1 score for style: 0.33
@@ -108,23 +108,23 @@ Full article:
 2024-02-11 22:19:09.710 | INFO     | __main__:main:158 - F1 score for none: 0.73
 ```
 
-### GPT-4 Results: 
+### GPT-4 Results:
 ```
-Sentence only: 
+Sentence only:
 2024-02-11 19:12:25.392 | INFO     | __main__:main:147 - Overall accuracy: 14.65\%
 2024-02-11 19:12:25.403 | INFO     | __main__:main:151 - Overall F1 score: 0.12
 2024-02-11 19:12:25.406 | INFO     | __main__:main:158 - F1 score for fact: 0.84
 2024-02-11 19:12:25.412 | INFO     | __main__:main:158 - F1 score for none: 0.11
 2024-02-11 19:12:25.414 | INFO     | __main__:main:158 - F1 score for style: 0.47
 
-Direct context: 
+Direct context:
 2024-02-11 20:53:47.388 | INFO     | __main__:main:147 - Overall accuracy: 59.10\%
 2024-02-11 20:53:47.402 | INFO     | __main__:main:151 - Overall F1 score: 0.64
 2024-02-11 20:53:47.406 | INFO     | __main__:main:158 - F1 score for fact: 0.27
 2024-02-11 20:53:47.412 | INFO     | __main__:main:158 - F1 score for none: 0.81
 2024-02-11 20:53:47.414 | INFO     | __main__:main:158 - F1 score for style: 0.28
 
-Full article: 
+Full article:
 2024-02-11 22:47:18.482 | INFO     | __main__:main:147 - Overall accuracy: 63.80\%
 2024-02-11 22:47:18.495 | INFO     | __main__:main:151 - Overall F1 score: 0.66
 2024-02-11 22:47:18.507 | INFO     | __main__:main:158 - F1 score for none: 0.85
@@ -132,7 +132,7 @@ Full article:
 2024-02-11 22:47:18.510 | INFO     | __main__:main:158 - F1 score for fact: 0.19
 ```
 
-### Fine-tuned longformer results 
+### Fine-tuned longformer results
 
 ```
 Sentence only:
@@ -155,5 +155,33 @@ Overall F1 score: 0.59
 F1 score for fact: 0.68
 F1 score for style: 0.89
 F1 score for none: 0.61
+
+```
+
+
+### Strict label results with Longformer:
+
+```
+Sentence only:
+              precision    recall  f1-score   support
+
+        fact       0.10      0.28      0.15        32
+        none       0.93      0.80      0.86       391
+
+    accuracy                           0.76       423
+   macro avg       0.52      0.54      0.51       423
+weighted avg       0.87      0.76      0.81       423
+```
+
+```
+Full article:
+              precision    recall  f1-score   support
+
+        fact       0.13      0.53      0.21        32
+        none       0.95      0.72      0.82       391
+
+    accuracy                           0.70       423
+   macro avg       0.54      0.62      0.51       423
+weighted avg       0.89      0.70      0.77       423
 
 ```
