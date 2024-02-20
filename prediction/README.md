@@ -47,108 +47,6 @@ python gpt_finetuning.py --prompt_type [sentence_only, direct_context, full_arti
 python compute_f1.py --predictions_fp <fp>
 ```
 
-### GPT-3.5 Results
-
-```
-Sentence only:
-2024-02-11 18:16:24.035 | INFO     | __main__:main:145 - Overall accuracy: 48.45\%
-2024-02-11 18:16:24.048 | INFO     | __main__:main:149 - Overall F1 score: 0.56
-2024-02-11 18:16:24.053 | INFO     | __main__:main:156 - F1 score for fact: 0.63
-2024-02-11 18:16:24.055 | INFO     | __main__:main:156 - F1 score for style: 0.24
-2024-02-11 18:16:24.064 | INFO     | __main__:main:156 - F1 score for none: 0.68
-
-2024-02-11 22:59:55.681 | INFO     | __main__:main:147 - Overall accuracy: 45.45\%
-2024-02-11 22:59:55.701 | INFO     | __main__:main:151 - Overall F1 score: 0.53
-2024-02-11 22:59:55.704 | INFO     | __main__:main:158 - F1 score for style: 0.19
-2024-02-11 22:59:55.706 | INFO     | __main__:main:158 - F1 score for fact: 0.53
-2024-02-11 22:59:55.713 | INFO     | __main__:main:158 - F1 score for none: 0.66
-
-Direct context:
-2024-02-11 18:31:01.978 | INFO     | __main__:main:145 - Overall accuracy: 66.75\%
-2024-02-11 18:31:01.991 | INFO     | __main__:main:149 - Overall F1 score: 0.68
-2024-02-11 18:31:01.994 | INFO     | __main__:main:156 - F1 score for fact: 0.22
-2024-02-11 18:31:01.996 | INFO     | __main__:main:156 - F1 score for style: 0.07
-2024-02-11 18:31:02.002 | INFO     | __main__:main:156 - F1 score for none: 0.88
-
-2024-02-11 23:18:50.596 | INFO     | __main__:main:147 - Overall accuracy: 66.85\%
-2024-02-11 23:18:50.604 | INFO     | __main__:main:151 - Overall F1 score: 0.68
-2024-02-11 23:18:50.606 | INFO     | __main__:main:158 - F1 score for fact: 0.23
-2024-02-11 23:18:50.612 | INFO     | __main__:main:158 - F1 score for none: 0.88
-2024-02-11 23:18:50.614 | INFO     | __main__:main:158 - F1 score for style: 0.10
-
-Full article:
-2024-02-11 18:51:40.048 | INFO     | __main__:main:147 - Overall accuracy: 66.85\%
-2024-02-11 18:51:40.076 | INFO     | __main__:main:151 - Overall F1 score: 0.69
-2024-02-11 18:51:40.083 | INFO     | __main__:main:158 - F1 score for fact: 0.22
-2024-02-11 18:51:40.080 | INFO     | __main__:main:158 - F1 score for style: 0.19
-2024-02-11 18:51:40.100 | INFO     | __main__:main:158 - F1 score for none: 0.88
-```
-
-### Fine-tuned GPT-3.5
-```
-Sentence only:
-2024-02-11 20:56:33.654 | INFO     | __main__:main:147 - Overall accuracy: 35.85\%
-2024-02-11 20:56:33.666 | INFO     | __main__:main:151 - Overall F1 score: 0.44
-2024-02-11 20:56:33.670 | INFO     | __main__:main:158 - F1 score for fact: 0.52
-2024-02-11 20:56:33.679 | INFO     | __main__:main:158 - F1 score for none: 0.52
-2024-02-11 20:56:33.681 | INFO     | __main__:main:158 - F1 score for style: 0.62
-
-Direct context:
-2024-02-11 20:48:04.393 | INFO     | __main__:main:147 - Overall accuracy: 36.30\%
-2024-02-11 20:48:04.404 | INFO     | __main__:main:151 - Overall F1 score: 0.45
-2024-02-11 20:48:04.407 | INFO     | __main__:main:158 - F1 score for style: 0.61
-2024-02-11 20:48:04.411 | INFO     | __main__:main:158 - F1 score for fact: 0.50
-2024-02-11 20:48:04.420 | INFO     | __main__:main:158 - F1 score for none: 0.53
-
-Full article:
-2024-02-11 22:19:09.682 | INFO     | __main__:main:147 - Overall accuracy: 52.90\%
-2024-02-11 22:19:09.694 | INFO     | __main__:main:151 - Overall F1 score: 0.60
-2024-02-11 22:19:09.698 | INFO     | __main__:main:158 - F1 score for style: 0.33
-2024-02-11 22:19:09.702 | INFO     | __main__:main:158 - F1 score for fact: 0.57
-2024-02-11 22:19:09.710 | INFO     | __main__:main:158 - F1 score for none: 0.73
-```
-
-### GPT-4 Results:
-```
-Sentence only:
-2024-02-11 19:12:25.392 | INFO     | __main__:main:147 - Overall accuracy: 14.65\%
-2024-02-11 19:12:25.403 | INFO     | __main__:main:151 - Overall F1 score: 0.12
-2024-02-11 19:12:25.406 | INFO     | __main__:main:158 - F1 score for fact: 0.84
-2024-02-11 19:12:25.412 | INFO     | __main__:main:158 - F1 score for none: 0.11
-2024-02-11 19:12:25.414 | INFO     | __main__:main:158 - F1 score for style: 0.47
-
-Direct context:
-2024-02-11 20:53:47.388 | INFO     | __main__:main:147 - Overall accuracy: 59.10\%
-2024-02-11 20:53:47.402 | INFO     | __main__:main:151 - Overall F1 score: 0.64
-2024-02-11 20:53:47.406 | INFO     | __main__:main:158 - F1 score for fact: 0.27
-2024-02-11 20:53:47.412 | INFO     | __main__:main:158 - F1 score for none: 0.81
-2024-02-11 20:53:47.414 | INFO     | __main__:main:158 - F1 score for style: 0.28
-
-Full article:
-2024-02-11 22:47:18.482 | INFO     | __main__:main:147 - Overall accuracy: 63.80\%
-2024-02-11 22:47:18.495 | INFO     | __main__:main:151 - Overall F1 score: 0.66
-2024-02-11 22:47:18.507 | INFO     | __main__:main:158 - F1 score for none: 0.85
-2024-02-11 22:47:18.509 | INFO     | __main__:main:158 - F1 score for style: 0.25
-2024-02-11 22:47:18.510 | INFO     | __main__:main:158 - F1 score for fact: 0.19
-```
-
-### Fine-tuned longformer results
-
-```
-Sentence only:
-Overall accuracy: 55.05%
-Overall F1 score: 0.60
-
-Direct context:
-Overall accuracy: 52.75%
-Overall F1 score: 0.59
-
-Full article:
-Overall accuracy: 54.00%
-Overall F1 score: 0.59
-
-```
-
 
 ### Strict fact label results with Longformer:
 
@@ -271,6 +169,88 @@ Direct context:
     accuracy                           0.81       423
    macro avg       0.52      0.54      0.52       423
 weighted avg       0.87      0.81      0.84       423
+
+Full article:
+
+              precision    recall  f1-score   support
+
+        fact       0.12      0.19      0.15        32
+        none       0.93      0.89      0.91       391
+
+    accuracy                           0.84       423
+   macro avg       0.53      0.54      0.53       423
+weighted avg       0.87      0.84      0.85       423
+```
+
+### v5 results with longformer
+
+```
+# strict fact, sentence only
+              precision    recall  f1-score   support
+
+        fact       0.19      0.25      0.21        32
+        none       0.94      0.91      0.92       391
+
+    accuracy                           0.86       423
+   macro avg       0.56      0.58      0.57       423
+weighted avg       0.88      0.86      0.87       423
+
+# strict fact, direct context
+              precision    recall  f1-score   support
+
+        fact       0.20      0.25      0.22        32
+        none       0.94      0.92      0.93       391
+
+    accuracy                           0.87       423
+   macro avg       0.57      0.58      0.57       423
+weighted avg       0.88      0.87      0.87       423
+
+
+# strict fact, full article
+              precision    recall  f1-score   support
+
+        fact       0.20      0.34      0.25        32
+        none       0.94      0.89      0.91       391
+
+    accuracy                           0.85       423
+   macro avg       0.57      0.62      0.58       423
+weighted avg       0.89      0.85      0.86       423
+
+```
+
+```
+# with style
+              precision    recall  f1-score   support
+
+        fact       0.23      0.13      0.17        53
+        none       0.72      0.25      0.38       306
+       style       0.18      0.78      0.29        64
+
+    accuracy                           0.32       423
+   macro avg       0.37      0.39      0.28       423
+weighted avg       0.58      0.32      0.34       423
+
+              precision    recall  f1-score   support
+
+        fact       0.21      0.19      0.20        53
+        none       0.71      0.29      0.41       306
+       style       0.16      0.64      0.26        64
+
+    accuracy                           0.33       423
+   macro avg       0.36      0.37      0.29       423
+weighted avg       0.56      0.33      0.36       423
+
+
+              precision    recall  f1-score   support
+
+        fact       0.26      0.17      0.20        53
+        none       0.67      0.21      0.32       306
+       style       0.17      0.77      0.27        64
+
+    accuracy                           0.29       423
+   macro avg       0.37      0.38      0.27       423
+weighted avg       0.54      0.29      0.30       423
+
 ```
 
 ## TODO

@@ -70,7 +70,7 @@ def format_gold_label_data(gold_test_data_fp, finegrained_to_coarsegrained, labe
     # drop na sentences
     gold_test_data = gold_test_data[~gold_test_data["source_sentence"].isna()]
     # if row's label is an empty list, set it to "none"
-    gold_test_data["label"] = gold_test_data["label"].applymap(
+    gold_test_data["label"] = gold_test_data["label"].apply(
         lambda x: x if x else ["none"]
     )
 
@@ -91,7 +91,13 @@ def format_gold_label_data(gold_test_data_fp, finegrained_to_coarsegrained, labe
                 f"Coarse grained label: {coarse_grained_label} for fine grained labels: {finegrained_labels}"
             )
             coarse_grained_label = list(coarse_grained_label)
-            breakpoint()
+
+            if "fact" in coarse_grained_label:
+                coarse_grained_label = "fact"
+            elif "style" in coarse_grained_label:
+                coarse_grained_label = "style"
+            else:
+                coarse_grained_label = "none"
 
         elif len(coarse_grained_label) == 1:
             coarse_grained_label = list(coarse_grained_label)[0]
@@ -189,7 +195,7 @@ def main():
     )
 
     gold_test_data_fp = f"{HOME_DIR}/data/prediction_data/test_v2.jsonl"
-    # format_gold_label_data(gold_test_data_fp, finegrained_to_coarsegrained, label_type)
+    format_gold_label_data(gold_test_data_fp, finegrained_to_coarsegrained, label_type)
 
     logger.info("Starting to format silver label data...")
 
@@ -312,28 +318,41 @@ def main():
     # get a list of article ids with orders preserved
     article_ids = all_df["article_id"].drop_duplicates().tolist()
 
-    # sample 20,000 article ids in sorted order with split by article ids 8:1:1
-    train_articles = set(
-        np.random.choice(
-            article_ids[: int(len(article_ids) * 0.8)],
-            args.num_train_articles,
-            replace=False,
+    if args.num_train_articles == -1:
+        train_articles = set(article_ids[: int(len(article_ids) * 0.8)])
+    else:
+        # sample 20,000 article ids in sorted order with split by article ids 8:1:1
+        train_articles = set(
+            np.random.choice(
+                article_ids[: int(len(article_ids) * 0.8)],
+                args.num_train_articles,
+                replace=False,
+            )
         )
-    )
-    dev_articles = set(
-        np.random.choice(
-            article_ids[int(len(article_ids) * 0.8) : int(len(article_ids) * 0.9)],
-            args.num_dev_articles,
-            replace=False,
+
+    if args.num_dev_articles == -1:
+        dev_articles = set(
+            article_ids[int(len(article_ids) * 0.8) : int(len(article_ids) * 0.9)]
         )
-    )
-    test_articles = set(
-        np.random.choice(
-            article_ids[int(len(article_ids) * 0.9) :],
-            args.num_dev_articles,
-            replace=False,
+    else:
+        dev_articles = set(
+            np.random.choice(
+                article_ids[int(len(article_ids) * 0.8) : int(len(article_ids) * 0.9)],
+                args.num_dev_articles,
+                replace=False,
+            )
         )
-    )
+
+    if args.num_dev_articles == -1:
+        test_articles = set(article_ids[int(len(article_ids) * 0.9) :])
+    else:
+        test_articles = set(
+            np.random.choice(
+                article_ids[int(len(article_ids) * 0.9) :],
+                args.num_dev_articles,
+                replace=False,
+            )
+        )
 
     split_mapping = np.where(
         all_df["article_id"].isin(train_articles),
